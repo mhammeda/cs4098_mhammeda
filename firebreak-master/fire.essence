@@ -1,0 +1,87 @@
+given graph_size : int
+given truck_size : int
+given graph : set of set (size 2) of int(0..(graph_size-1)) $this will be type graph
+letting State be domain record { fire  : set of int(0..(graph_size-1))
+                               , water : set of int(0..(graph_size-1))
+                               , grass : set of int(0..(graph_size-1))
+                               }
+
+given start : State
+
+find progression : sequence (injective,maxSize graph_size) of State
+find waterdrops : sequence (maxSize (graph_size - 1)) of set of int(0..(graph_size-1)) 
+
+$ tie sequences together
+such that |progression| = |waterdrops| + 1
+
+$ Starting state
+such that progression(1) = start
+
+$ Ending state
+such that
+    forAll e in graph .
+        forAll v in e .
+            v in progression(|progression|)[fire] -> forAll a in e . (a in progression(|progression|)[fire]) \/ (a in progression(|progression|)[water])
+        
+
+$ water stays put
+such that
+    forAll (t,p) in progression .
+        t > 1 -> forAll i : int(0..(graph_size-1)) .
+                     (i in progression(t-1)[water]) -> i in p[water]
+
+$ fire stays put
+such that
+    forAll (t,p) in progression .
+        t > 1 -> forAll i : int(0..(graph_size-1)) .
+                     (i in progression(t-1)[fire]) -> i in p[fire]
+
+
+$ water drop capacity
+such that
+    forAll (i,s) in waterdrops .
+        and([i < |waterdrops| -> |s| = truck_size
+            ,i = |waterdrops| -> |s| <= truck_size
+            ])
+
+$ water dropped at most once on a vertex
+such that
+    forAll (i,s) in waterdrops .
+        forAll (j,e) in waterdrops .
+            i != j -> |s intersect e| = 0
+
+$ water comes from a drop 
+such that
+    forAll (t,p) in progression .
+        t > 1 -> forAll i : int(0..(graph_size-1)) .
+                   (i in progression(t-1)[grass] /\ i in p[water]) <-> i in waterdrops(t-1)
+
+
+$ State is a partition
+such that
+    forAll (_,p) in progression .
+        |p[fire] union p[water] union p[grass]| = graph_size
+such that
+    forAll (_,p) in progression .
+        forAll i : int(0..(graph_size-1)) .
+               (i in p[fire] <-> !(i in p[water]) /\ !(i in p[grass]))
+            /\ (i in p[water] <-> !(i in p[fire]) /\ !(i in p[grass]))
+            /\ (i in p[grass] <-> !(i in p[fire]) /\ !(i in p[water]))
+ 
+$ fire spreads to adjacent grass 
+such that 
+    forAll (t,p) in progression .
+        t > 1 -> forAll f in progression(t-1)[fire] .
+                    forAll e in graph .
+                       f in e ->  and([ s != f -> (s in p[fire] \/ s in p[water])
+                                      | s <- e])
+
+$ grass surrounded by non-fire stays grass
+such that
+    forAll (t,p) in progression .
+        t > 1 -> forAll f in progression(t-1)[grass] .
+                    and([and([ !(v in progression(t-1)[fire])
+                             |v <- e, v != f])
+                        | e <- graph, f in e]) -> f in p[grass]
+
+minimizing |progression(|progression|)[fire]|

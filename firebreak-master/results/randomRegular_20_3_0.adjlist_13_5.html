@@ -1,0 +1,63 @@
+<head>
+  <style> body { margin: 0; } </style>
+  <script src="https://unpkg.com/3d-force-graph"></script>
+</head>
+
+<body>
+   <button onclick="startFire()">Go</button>
+   <button onclick="resetFire()">reset</button>
+   <div id="3d-graph"></div>
+
+  <script>
+    const gData = {nodes : [{id : 0},{id : 1},{id : 2},{id : 3},{id : 4},{id : 5},{id : 6},{id : 7},{id : 8},{id : 9},{id : 10},{id : 11},{id : 12},{id : 13},{id : 14},{id : 15},{id : 16},{id : 17},{id : 18},{id : 19},{id : 20}],links :[{source : 0,target : 2},{source : 0,target : 3},{source : 0,target : 6},{source : 1,target : 2},{source : 1,target : 7},{source : 1,target : 14},{source : 2,target : 9},{source : 3,target : 4},{source : 3,target : 5},{source : 4,target : 13},{source : 4,target : 15},{source : 5,target : 11},{source : 5,target : 14},{source : 6,target : 17},{source : 6,target : 18},{source : 7,target : 13},{source : 7,target : 17},{source : 8,target : 10},{source : 8,target : 16},{source : 8,target : 19},{source : 9,target : 12},{source : 9,target : 18},{source : 10,target : 12},{source : 10,target : 19},{source : 11,target : 14},{source : 11,target : 18},{source : 12,target : 17},{source : 13,target : 15},{source : 15,target : 16},{source : 16,target : 19}]}
+
+
+    x = 0
+    const firespread =[{fire:[13],water:[],grass:[0,1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19]},{fire:[13],water:[4,7,15],grass:[0,1,2,3,5,6,8,9,10,11,12,14,16,17,18,19]}]
+
+    var Graph = ForceGraph3D()
+      (document.getElementById('3d-graph')).graphData(gData);
+      Graph.nodeColor(function(d) {  if (firespread[x].fire.includes(d.id) ) {
+                                         return 'red'
+                                       } 
+                                       if (firespread[x].water.includes(d.id) ) {
+                                         return 'blue'
+                                       }
+                                       return 'green'
+                                    } );
+    var fireInterval;
+    function startFire() {
+      resetFire();
+      fireInterval = setInterval(function() {
+        if ( x == firespread.length - 1) {
+          clearinterval(fireinterval);
+          return;
+        }
+        Graph.nodeColor(function(d) {  if (firespread[x].fire.includes(d.id) ) {
+                                         return 'red'
+                                       } 
+                                       if (firespread[x].water.includes(d.id) ) {
+                                         return 'blue'
+                                       }
+                                       return 'green'
+                                    } );
+        x = (x + 1) % firespread.length;
+
+      },1000)
+    }
+    function resetFire() {
+      clearInterval(fireInterval);
+      x = 0;
+      Graph.nodeColor(function(d) {  if (firespread[x].fire.includes(d.id) ) {
+                                         return 'red'
+                                       } 
+                                       if (firespread[x].water.includes(d.id) ) {
+                                         return 'blue'
+                                       }
+                                       return 'green'
+                                    } );
+    }
+
+  </script>
+</body>
+

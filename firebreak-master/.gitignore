@@ -1,0 +1,6 @@
+conjure-output
+.MINION*
+*param
+*.solution
+*.failure
+
