@@ -1,10 +1,14 @@
 import os
+from networkx.classes.function import degree
+from networkx.generators.atlas import graph_atlas
 from pyvis.network import Network
 
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from scipy import stats
+from numpy.linalg import matrix_rank
 
 filepath_to_graphs = ".\\firebreak-master\\graph_files"
 
@@ -12,16 +16,214 @@ filepath_to_save_graphs = ".\graph_images"
 
 
 def main():
-    graph_num = 0
     graph_files = os.listdir(filepath_to_graphs)
+    graph = None
+    df = pd.DataFrame(columns=['graph_name',
+                               'num_nodes',
+                               'num_edges',
+                               'graph_density',
+                               'mean_degree',
+                               'median_degree',
+                               'mode_degree',
+                               'degree_std',
+                               'iqr_degree',
+                               'degree_amd',
+                               'node_connectivity',
+                               'average_clustering',
+                               'diameter',
+                               'adjacency_matrix_rank',
+                               'incidence_matrix_rank',
+                               'laplacian_matrix_rank',
+                               'bethe_hessian_matrix_rank',
+                               'algebraic_connectivity',
+                               'modularity_matrix_rank',
+                               'wiener_index',
+                               'degree_assortativity_coefficient',
+                               'degree_pearson_correlation_coefficient',
+                               'is_AT_free',
+                               'has_bridge',
+                               'is_chordal',
+                               'clique_number',
+                               'triangle_number',
+                               'transitivity',
+                               'average_node_connectivity',
+                               'edge_connectivity',
+                               'node_connectivity',
+                               'is_edge_cover',
+                               'is_distance_regular',
+                               'local_efficiency',
+                               'global_efficiency',
+                               'is_threshold_graph',
+                               's_metric',
+                               'small_world_coefficient_sigma',
+                               'small_world_coefficient_omega',
+                               'average_shortest_path_length',
+                               'extreme_distance_metric',
+                               'radius',
+                               'resistance_distance',
+                               'is_eulerian',
+                               'is_semi_eulerian'])
 
     for graph_file in graph_files:
         file = open(filepath_to_graphs + "\\" + graph_file)
         graph_as_adj_list = file.read()
         file.close()
         graph = create_graph_from_string(graph_as_adj_list)
-        save_graph(graph, graph_num)
-        graph_num = graph_num + 1
+        df = add_data_from_graphs_to_df(graph, graph_file, df)
+        break
+
+    df.to_csv('graph_data.csv', index=False)
+
+    #save_graph(graph, graph_num)
+    #graph_num = graph_num + 1
+
+
+def add_data_from_graphs_to_df(graph, graph_name, df):
+    num_nodes = nx.number_of_nodes(graph)
+    num_edges = nx.number_of_edges(graph)
+    # https://networkx.org/documentation/stable/reference/generated/networkx.classes.function.density.html#networkx.classes.function.density
+    graph_density = nx.density(graph)
+    # May get statistics like the mode and median
+    # https://networkx.org/documentation/stable/reference/generated/networkx.classes.function.degree_histogram.html#networkx.classes.function.degree_histogram
+    graph_stats = calculate_graph_stat(graph)
+    graph_mean_degree = graph_stats[0]
+    graph_median_degree = graph_stats[1]
+    graph_mode_degree = graph_stats[2]
+    graph_degree_std = graph_stats[3]
+    graph_iqr_degree = graph_stats[4]
+    graph_degree_amd = graph_stats[5]
+
+    # https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.approximation.connectivity.node_connectivity.html#networkx.algorithms.approximation.connectivity.node_connectivity
+    graph_node_connectivity = nx.node_connectivity(graph)
+
+    # https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.approximation.clustering_coefficient.average_clustering.html#networkx.algorithms.approximation.clustering_coefficient.average_clustering
+    graph_average_clustering = nx.average_clustering(graph)
+
+    graph_diameter = nx.diameter(graph)
+    graph_adjacency_matrix_rank = matrix_rank(nx.adjacency_matrix(graph))
+    graph_incidence_matrix_rank = matrix_rank(nx.incidence_matrix(graph))
+    graph_laplacian_matrix_rank = matrix_rank(nx.laplacian_matrix(graph))
+    graph_bethe_hessian_matrix_rank = matrix_rank(
+        nx.bethe_hessian_matrix(graph))
+    graph_algebraic_connectivity = nx.algebraic_connectivity(graph)
+    graph_modularity_matrix_rank = matrix_rank(nx.modularity_matrix(graph))
+
+    # Sum of the shortest-path distances between each pair of reachable nodes
+    graph_wiener_index = nx.wiener_index(graph)
+
+    graph_degree_assortativity_coefficient = nx.degree_assortativity_coefficient(
+        graph)
+    
+    graph_degree_pearson_correlation_coefficient = nx.degree_pearson_correlation_coefficient(
+        graph)
+
+    graph_is_AT_free = nx.is_at_free(graph)
+    graph_has_bridge = nx.has_bridges(graph)
+
+    graph_is_chordal = nx.is_chordal(graph)
+    graph_clique_number = nx.graph_clique_number(graph)
+    graph_triangle_number = nx.triangles(graph)
+    graph_transitivity = nx.transitivity(graph)
+    graph_average_node_connectivity = nx.average_node_connectivity(graph)
+
+    graph_edge_connectivity = nx.edge_connectivity(graph)
+    graph_node_connectivity = nx.node_connectivity(graph)
+    graph_is_edge_cover = nx.is_edge_cover(graph)
+
+    graph_is_distance_regular = nx.is_distance_regular(graph)
+
+    graph_local_efficiency = nx.local_efficiency(graph)
+    graph_global_efficiency = nx.global_efficiency(graph)
+    graph_is_threshold = nx.is_threshold_graph(graph)
+    graph_s_metric = nx.s_metric(graph)
+
+    # https://en.wikipedia.org/wiki/Small-world_network
+    graph_small_world_coefficient_sigma = nx.sigma(graph)
+    graph_small_world_coefficient_omega = nx.omega(graph)
+
+    graph_average_shortest_path_length = nx.average_shortest_path_length(
+        graph)
+    graph_extreme_distance_metric = nx.extrema_bounding(graph)
+    graph_radius = nx.radius(graph)
+    graph_resistance_distance = nx.resistance_distance(graph)
+    graph_is_eulerian = nx.is_eulerian(graph)
+    graph_is_semi_eulerian = nx.is_semieulerian(graph)
+
+    data_row = [[graph_name,
+                 num_nodes,
+                 num_edges,
+                 graph_density,
+                 graph_mean_degree,
+                 graph_median_degree,
+                 graph_mode_degree,
+                 graph_degree_std,
+                 graph_iqr_degree,
+                 graph_degree_amd,
+                 graph_node_connectivity,
+                 graph_average_clustering,
+                 graph_diameter,
+                 graph_adjacency_matrix_rank,
+                 graph_incidence_matrix_rank,
+                 graph_laplacian_matrix_rank,
+                 graph_bethe_hessian_matrix_rank,
+                 graph_algebraic_connectivity,
+                 graph_modularity_matrix_rank,
+                 graph_wiener_index,
+                 graph_degree_assortativity_coefficient,
+                 graph_degree_pearson_correlation_coefficient,
+                 graph_is_AT_free,
+                 graph_has_bridge,
+                 graph_is_chordal,
+                 graph_clique_number,
+                 graph_triangle_number,
+                 graph_transitivity,
+                 graph_average_node_connectivity,
+                 graph_edge_connectivity,
+                 graph_node_connectivity,
+                 graph_is_edge_cover,
+                 graph_is_distance_regular,
+                 graph_local_efficiency,
+                 graph_global_efficiency,
+                 graph_is_threshold,
+                 graph_s_metric,
+                 graph_small_world_coefficient_sigma,
+                 graph_small_world_coefficient_omega,
+                 graph_average_shortest_path_length,
+                 graph_extreme_distance_metric,
+                 graph_radius,
+                 graph_resistance_distance,
+                 graph_is_eulerian,
+                 graph_is_semi_eulerian]]
+    df_length = len(df)
+    df.loc[df_length] = data_row
+
+    return df
+
+# This might contain relevant information:
+# https://networkx.org/documentation/stable/reference/algorithms/community.html
+
+
+def calculate_graph_stat(graph):
+    graph_histogram_data = nx.degree_histogram(graph)
+    degree_data_for_nodes = []
+    for i in range(len(graph_histogram_data)):
+        for j in range(graph_histogram_data[i]):
+            degree_data_for_nodes.append(i)
+
+    graph_mean_degree = np.mean(degree_data_for_nodes)
+    graph_median_degree = np.median(degree_data_for_nodes)
+    graph_mode_degree = stats.mode(degree_data_for_nodes)
+    graph_sd_degree = np.std(degree_data_for_nodes)
+    graph_iqr_degree = stats.iqr(degree_data_for_nodes)
+    graph_degree_amd = np.mean(
+        (np.abs(degree_data_for_nodes - np.mean(degree_data_for_nodes))))
+
+    return [graph_mean_degree,
+            graph_median_degree,
+            graph_mode_degree,
+            graph_sd_degree,
+            graph_iqr_degree,
+            graph_degree_amd]
 
 
 def create_graph_from_string(string_to_read_from):
