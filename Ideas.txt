@@ -1,9 +1,19 @@
-If graph is a tree, defend the node ajacent to the nodes on fire
+If graph is a tree, defend the node ajacent to the nodes on fire [I]
+
 What information can we get from a minimum cut?
+
 For a highly connected graph - we select the node that is part of the most communities
+
 Defending the "gate" node to a community (entry or exit)
-Defending the node with the highest degree
+
+Defending the node with the highest degree [I]
+
 Calculating the average distance to all the other nodes, from the nodes on fire and potentially
     Defending the ones which are of relatively "medium" distance away
     Defending the ones which are of the least occured distance
-"Node that most appears" in the shortest path between all the nodes on fire and all the other nodes
+
+"Node that most appears" in the shortest path between all the nodes on fire and all the other nodes [I]
+
+
+13/10
+A measure of how close a graph is to a tree would be incredibly useful.
