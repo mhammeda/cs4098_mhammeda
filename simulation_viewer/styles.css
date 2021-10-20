@@ -1,0 +1,15 @@
+#master_container {
+    background-color: gainsboro;
+    width: 700px;
+    height: 750px;
+}
+
+#img_placeholder_container {
+    width: 640px;
+    height: 480px;
+}
+
+#input_options {
+    width: 640px;
+    height: 240px;
+}
