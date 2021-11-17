@@ -6,7 +6,7 @@ import pandas as pd
 graph_name_in_focus = ""
 fig_num = 0
 seed_num = 0
-num_sims_per_combination = 5
+num_sims_per_combination = 50
 
 
 def main():
